@@ -1,3 +1,3 @@
 # Linux-Tools
 ## monitor the storage usage remotely
-The tools will send email to the admin if the storage will be ran out. 
+An email wiil be sent to the admin and users if the storage will run out. The admin will be informed if the monitoring system is brokendown. 
