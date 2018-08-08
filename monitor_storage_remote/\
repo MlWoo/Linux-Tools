@@ -1,0 +1,28 @@
+#!/bin/bash
+
+#read -s PWD
+
+host="10.128.2.14"
+PWD="wumenglin"
+
+VAR=$(expect -c '
+  log_user 0
+  spawn ssh wumenglin@10.128.2.14
+  expect {
+    password: { send "wumenglin\r";}
+    timeout   { puts "Timeout or EOF\n"; exit 1 }
+    eof       { puts "Connection rejected by the host\r"; exit 2 }
+  }
+  set prompt "#|>|:|\$";
+  expect -re $prompt;
+  send "df -h | grep /dev/sda6"
+  expect "\$" 
+  puts "heelo"
+  puts $expect_out;
+  exit 0
+')
+echo "Expect's return value : $?"
+echo $VAR
+
+
+
