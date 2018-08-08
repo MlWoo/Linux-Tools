@@ -20,7 +20,10 @@ def send_email(to, email_text):
         print('Something went wrong when logining the gmail...')
 
 storage_threshold = 50
-def job():
+
+day_to_seconds = 24*3600
+
+def job(inc):
     rst = os.popen("./script.sh")
     try:
         rst_list = rst.read().split()
@@ -33,6 +36,9 @@ def job():
             body = """Hey, all,\n The storage will run out, plz clear useless files ASAP.\n --wumenglin"""
             email_text = 'Subject: {}\n\n{}'.format(subject, body)
             send_email(to, email_text)
+            return day_to_seconds  #send the email in the next day
+        else:
+            return inc
     except:
         print('Something went wrong when executing the scripts...')
         to = ['menglin@163.com']
@@ -46,7 +52,7 @@ def job():
 schedule = sched.scheduler(time.time, time.sleep)
 
 def execute_command(inc):
-    job()
+    inc = job(inc)
     schedule.enter(inc, 0, execute_command, (inc,))
 
 def main(inc=60):
