@@ -1,0 +1,84 @@
+#!/usr/bin/expect
+
+#help doc
+puts "scp_location \[mode\] \<file1,file2,...,fileN\>  \[dst_dir\]"
+puts "              mode: dstination dir"
+puts "                    -- 0, default path(from_ip);"
+puts "                    -- 1, same as the source file;"
+puts "                    -- 2, the dstination dir argument;"
+puts "                    -- Null, default path(from_ip);\n\n"
+
+
+set count 0
+if { $argc == 0 } {
+    puts "No args passed :("
+    exit 1
+}
+
+set count $argc
+set mode [lindex $argv 0]
+set with_mode 1
+if { $mode == 0 } {
+    puts "default path(from_ip)"
+} elseif { $mode == 1 } {
+    puts "same as the source file"
+} elseif {$mode == 2 } {
+    puts "the last argument is set to the destination path"
+} else {
+    puts "default mode(mode: 0) default path(from_ip)"
+    set mode 0
+    set with_mode 0
+}
+
+set host "10.129.0.245"
+set user_name "lynn"                                                                                                                                                                                      
+set pwd "XXXXXXXX"
+log_user 0
+log_file -a "scp_files.log"
+set timeout 600
+
+set parent_dir "/home/lynn/from_14/"
+
+if { $mode == 2 } {
+    set start_idx 1
+    set count [expr $count-1]
+    set sub_dir [lindex $argv $count]
+    set parent_dir "/home/lynn/from_14/$sub_dir"
+    puts "you select \[  $sub_dir  \] as your destination dir, is it right?(y/n)"
+} elseif { $with_mode==1 } {
+    set start_idx 1
+} else {
+    set start_idx 0
+}
+
+for {set idx $start_idx} {$idx < $count} {incr idx} {
+    set file [lindex $argv $idx]
+    set dir_name [exec dirname $file]
+    spawn ssh $user_name@$host
+    expect {
+        timeout   { puts "ssh Timeout or EOF\n"; exit 1 }
+        eof       { puts "ssh Connection rejected by the host\r"; exit 2 }
+        "password:" { send "$pwd\r"; expect "\$ "}
+    }
+    
+    if { $mode == 2 } {
+        puts " mkdir $parent_dir"
+        send "mkdir -p $parent_dir\r"
+	set dst_dir $parent_dir
+
+    } else {
+        puts " mkdir $parent_dir/$dir_name "
+        send "mkdir -p $parent_dir/$dir_name\r"
+	set dst_dir $parent_dir/$dir_name
+
+    }
+
+    send "exit \r"
+    puts "scp -r $file $user_name@$host:$dst_dir "
+    spawn scp -r $file $user_name@$host:$dst_dir
+    expect {
+        timeout   { puts "scp Timeout or EOF\n"; exit 1 }
+        "password:" { send "$pwd\r"; exp_continue}
+    }
+}
+
